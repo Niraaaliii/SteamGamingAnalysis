@@ -1,0 +1,14 @@
+# Project configuration for Gaming Analysis ETL
+
+data_dir: data
+cleaned_data_file: data/cleaned_gaming_data.csv
+database_file: gaming_sessions.db
+
+# Simulation parameters
+avg_session_duration_min: 60
+max_sessions_per_day: 20
+session_duration_min: 20
+session_duration_max: 120
+session_count_noise: 0.3  # +/- 30% noise
+session_peak_hour: 20     # Center of gaming activity (8pm)
+session_peak_stddev: 3    # Spread of gaming activity hours
