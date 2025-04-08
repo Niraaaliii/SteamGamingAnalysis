@@ -92,8 +92,11 @@ cython_debug/
 # SQLite database
 *.db
 
-# Data files
+# Input Data files
 data/
+
+# Output files
+output/
 
 # Config files with secrets (uncomment if needed)
 # config.yaml

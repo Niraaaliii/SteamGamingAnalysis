@@ -1,126 +1,117 @@
-# Gaming Data ETL & Peak Hours Analysis
+# Gaming Session Log Generation & Peak Hours Analysis
 
-This project processes Steam gaming data, simulates session logs, and enables analysis of **peak gaming hours** and **weekend activity** using SQL and Tableau.
+This project processes daily Steam game data snapshots, generates a synthetic session log dataset, and prepares the data for analyzing **peak gaming hours** and **weekend activity** using tools like SQL or Tableau.
 
 ---
 
 ## Project Workflow
 
-1. **Clean Raw Data**
+The core of the project is a single ETL script:
 
-- Loads daily CSV files from `data/`
-- Cleans and combines them into one dataset
-- Saves to `data/cleaned_gaming_data.csv`
+1.  **Generate Session Logs (`src/etl/generate_sessions.py`)**
+    *   Loads daily CSV game data snapshots from the `data/` directory.
+    *   Standardizes column names and cleans data (handling variations and numeric formatting).
+    *   Calculates game popularity weights based on the average `peak_players` across available days.
+    *   Simulates realistic user sessions (`user_id`, `game_id`, `session_start`, `session_end`, `session_duration_minutes`, `day_of_week`, `hour_of_day`) based on game popularity and typical time-of-day patterns (weekday vs. weekend peaks).
+    *   Cleans the generated session data (checks durations, handles missing values).
+    *   Saves the final cleaned session log data to `output/cleaned_sessions.csv` (path configurable in `config.yaml`).
 
-Run:
+    **Run the script:**
+    ```bash
+    python src/etl/generate_sessions.py
+    ```
+    *(Ensure you have the required dependencies installed and are in the project's root directory)*
 
-```bash
-python3 src/simple_etl.py
-```
-
----
-
-2. **Simulate Session Logs**
-
-- Generates **mocked session-level data** based on cleaned daily totals
-- Adds realistic variability in session times and durations
-- Saves sessions into an SQLite database `gaming_sessions.db`
-
-Run:
-
-```bash
-python3 src/simulate_sessions.py
-```
+2.  **Analyze Peak Hours**
+    *   Load the generated `output/cleaned_sessions.csv` file into your preferred analysis tool (e.g., database via SQL import, Tableau, Python with pandas).
+    *   Perform aggregations to find:
+        *   Peak hours overall and per game.
+        *   Differences in activity between weekdays and weekends.
+        *   Hourly usage spikes.
 
 ---
 
-3. **Analyze Peak Hours**
+## Configuration (`config.yaml`)
 
-- Query `gaming_sessions.db` to find:
-  - Peak hours per game
-  - Weekend vs weekday activity
-  - Hourly usage spikes
-
-Use **DB Browser for SQLite**, Python, or Tableau.
-
----
-
-## Configuration
-
-All parameters are in `config.yaml`:
+Key parameters for the session generation are controlled via `config.yaml`:
 
 ```yaml
-data_dir: data
-cleaned_data_file: data/cleaned_gaming_data.csv
-database_file: gaming_sessions.db
+# Project configuration for Gaming Analysis ETL
 
-avg_session_duration_min: 60
-max_sessions_per_day: 20
-session_duration_min: 20
-session_duration_max: 120
-session_count_noise: 0.3
-session_peak_hour: 20
-session_peak_stddev: 3
+data_dir: data
+output_dir: output
+cleaned_sessions_file: output/cleaned_sessions.csv
+
+# Parameters for src/etl/generate_sessions.py
+session_generation:
+  num_users: 1000
+  simulation_days: 30
+  start_date: "2022-05-01"
+  target_session_count: 15000
+
+# ... (other parameters)
 ```
 
-Adjust these to control simulation realism and file paths.
+Adjust these values in `config.yaml` to control the simulation details and file paths.
 
 ---
 
-## Example SQL Queries
+## Documentation
 
-**Sessions per hour per game:**
+For more details on the ETL process and data generation logic, refer to:
 
-```sql
-SELECT game_name, strftime('%H', session_start) AS hour, COUNT(*) AS session_count
-FROM session_logs
-GROUP BY game_name, hour
-ORDER BY game_name, hour;
-```
+*   **`ETL_Overview.md`**: High-level explanation of the script's functions and workflow.
+*   **`Data_Processing_Details.md`**: In-depth technical details on data handling and session field calculations.
 
-**Sessions by weekday and hour:**
+---
+
+## Example SQL Query (using the generated CSV)
+
+Assuming `cleaned_sessions.csv` is loaded into a table named `session_logs`:
+
+**Sessions by Day of Week and Hour:**
 
 ```sql
 SELECT
-  game_name,
-  CASE strftime('%w', session_start)
-    WHEN '0' THEN 'Sunday'
-    WHEN '1' THEN 'Monday'
-    WHEN '2' THEN 'Tuesday'
-    WHEN '3' THEN 'Wednesday'
-    WHEN '4' THEN 'Thursday'
-    WHEN '5' THEN 'Friday'
-    WHEN '6' THEN 'Saturday'
-  END AS weekday,
-  strftime('%H', session_start) AS hour,
+  day_of_week,
+  hour_of_day,
   COUNT(*) AS session_count
 FROM session_logs
-GROUP BY game_name, weekday, hour
-ORDER BY game_name, weekday, hour;
+GROUP BY day_of_week, hour_of_day
+ORDER BY
+  CASE day_of_week -- Order days correctly
+    WHEN 'Monday' THEN 1
+    WHEN 'Tuesday' THEN 2
+    WHEN 'Wednesday' THEN 3
+    WHEN 'Thursday' THEN 4
+    WHEN 'Friday' THEN 5
+    WHEN 'Saturday' THEN 6
+    WHEN 'Sunday' THEN 7
+  END,
+  hour_of_day;
 ```
 
 ---
 
 ## Dependencies
 
-- Python 3.x
-- pandas
-- pyyaml
-- sqlite3 (standard library)
+*   Python 3.x
+*   pandas
+*   PyYAML
+*   NumPy
 
-Install with:
+Install required packages (preferably in a virtual environment):
 
 ```bash
-pip3 install pandas pyyaml
+pip install pandas pyyaml numpy
 ```
 
 ---
 
 ## Summary
 
-- **Clean** your raw gaming data.
-- **Simulate** realistic session logs.
-- **Analyze** peak hours and weekend activity.
-- **Visualize** insights in Tableau or other BI tools.
+- **Run** the ETL script (`src/etl/generate_sessions.py`) to generate session data.
+- **Analyze** the output (`output/cleaned_sessions.csv`) to identify peak hours and weekend trends.
+- **Visualize** insights using SQL, Tableau, or other BI tools.
 
-This enables **data-driven decisions** for event planning and player engagement.
+This enables **data-driven decisions** for event planning and player engagement based on simulated session patterns.
