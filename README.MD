@@ -174,31 +174,6 @@ GROUP BY g.name, day_of_week_num, hour_of_day
 ORDER BY g.name, day_of_week_num, hour_of_day;
 
 ```
-
-### Tableau Integration
-
-1.  **Connect to Data:**
-    *   Open Tableau Desktop.
-    *   Under "Connect" -> "To a File", select "More..." and find your SQLite file (`output/steam_player_counts.sqlite3`). Alternatively, use the "SQLite" connector if available directly.
-2.  **Data Model:**
-    *   Drag the `player_counts` table onto the canvas.
-    *   Drag the `games` table onto the canvas. Tableau should automatically detect the relationship based on `app_id`. If not, create an inner join between `player_counts.app_id` and `games.app_id`.
-3.  **Create Visualizations:**
-    *   **Peak Hours Heatmap:**
-        *   Columns: `timestamp` (set to Hour).
-        *   Rows: `timestamp` (set to Weekday).
-        *   Color: `SUM(Player Count)` or `AVG(Player Count)`.
-        *   Filter by `Name` (from `games` table) if desired.
-    *   **Player Count Trends Over Time:**
-        *   Columns: `timestamp` (set to Continuous Hour or Day).
-        *   Rows: `SUM(Player Count)`.
-        *   Color/Detail: `Name` (from `games` table).
-    *   **Weekend vs. Weekday Activity:**
-        *   Create a calculated field for "Weekend/Weekday": `IF DATEPART('weekday', [Timestamp]) = 1 OR DATEPART('weekday', [Timestamp]) = 7 THEN 'Weekend' ELSE 'Weekday' END`
-        *   Columns: `timestamp` (set to Hour).
-        *   Rows: `AVG(Player Count)`.
-        *   Color: Your "Weekend/Weekday" calculated field.
-
 ---
 
 ## Cleanup (Optional)
