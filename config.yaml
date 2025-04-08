@@ -1,12 +1,13 @@
-# Project configuration for Gaming Analysis ETL
+# Project configuration for Gaming Analysis ETL using Steam API
 
-data_dir: data
-output_dir: output # Added for consistency
-cleaned_sessions_file: output/cleaned_sessions.csv # Updated path based on script
+# Directory for output files (like the database)
+output_dir: output
 
-# Parameters for src/etl/generate_sessions.py
-session_generation:
-  num_users: 1000
-  simulation_days: 30 # Renamed from 'days' to be more descriptive
-  start_date: "2022-05-01" # Stored as string
-  target_session_count: 15000
+# Database configuration
+database:
+  path: output/steam_player_counts.sqlite3 # Path to the SQLite database file
+
+# Steam API settings
+steam_api:
+  top_n_games: 10 # Number of top games to fetch player counts for
+  # API Key should be set as an environment variable: STEAM_API_KEY
