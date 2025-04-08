@@ -31,8 +31,8 @@ The script operates through several key functions:
     *   **Output:** A dictionary mapping each game name to its popularity rank (weight).
 
 5.  **`_simulate_user_sessions(...)`**: (Helper for `generate_sessions`)
-    *   **Purpose:** Generates the synthetic session log entries. It uses the calculated game weights to probabilistically select games, and employs different statistical distributions to simulate realistic session start times (weekday vs. weekend peaks) and durations.
-    *   **Output:** A pandas DataFrame containing the simulated sessions with columns like `user_id`, `game_id`, `session_start`, `session_end`, etc.
+    *   **Purpose:** Generates the synthetic session log entries. It uses the calculated game weights to probabilistically select games, and employs different statistical distributions to simulate realistic session start times (weekday vs. weekend peaks) and durations (now allowing for longer, multi-hour sessions).
+    *   **Output:** A pandas DataFrame containing the simulated sessions with columns like `user_id`, `game_id`, `session_start`, `session_end`, `session_duration`, etc.
 
 6.  **`clean_sessions(df)`**:
     *   **Purpose:** Takes the raw simulated session DataFrame, converts time columns to the correct format, recalculates durations for accuracy, removes invalid sessions (e.g., zero duration), and handles any missing values.

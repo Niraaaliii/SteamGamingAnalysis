@@ -210,15 +210,17 @@ def _simulate_user_sessions(game_weights, num_users, simulation_days, start_date
         if is_weekend:
             base_hour = np.random.triangular(12, 20, 23) # Weekend peak: Noon-11pm, centered around 8pm
         else:
-            base_hour = np.random.normal(19, 2.5) # Weekday peak: Centered around 7pm
+            # Increased stddev slightly for more weekday start time variability
+            base_hour = np.random.normal(19, 3.0) # Weekday peak: Centered around 7pm, slightly more spread
             
         hour = int(np.clip(base_hour, 0, 23))
         minute = np.random.randint(0, 59)
         session_start = current_date.replace(hour=hour, minute=minute)
         
-        # Generate session duration
-        duration = np.random.lognormal(mean=2.5, sigma=0.8) # Log-normal distribution
-        duration = max(5, min(240, int(duration)))  # Clamp between 5min and 4hr
+        # Generate session duration - Adjusted parameters for longer sessions
+        # Increased mean and sigma, increased clamp range
+        duration = np.random.lognormal(mean=3.8, sigma=1.0) # Adjusted log-normal parameters
+        duration = max(15, min(600, int(duration)))  # Clamp between 15min and 10hr (600 min)
         session_end = session_start + timedelta(minutes=duration)
         
         sessions.append({
@@ -226,7 +228,7 @@ def _simulate_user_sessions(game_weights, num_users, simulation_days, start_date
             'game_id': game,
             'session_start': session_start.isoformat(),
             'session_end': session_end.isoformat(),
-            'session_duration_minutes': duration,
+            'session_duration': duration, # Renamed column
             'day_of_week': session_start.strftime('%A'),
             'hour_of_day': hour
         })
@@ -291,7 +293,7 @@ def generate_sessions(config):
 def clean_sessions(df):
     """Cleans the generated session DataFrame.
 
-    Converts time columns to datetime objects, recalculates duration,
+    Converts time columns to datetime objects, recalculates duration (now 'session_duration'),
     removes invalid sessions (zero/negative duration), and drops missing values.
 
     Args:
@@ -310,14 +312,14 @@ def clean_sessions(df):
     df['session_start'] = pd.to_datetime(df['session_start'])
     df['session_end'] = pd.to_datetime(df['session_end'])
     
-    # Fix any duration miscalculations
-    df['session_duration_minutes'] = (
+    # Fix any duration miscalculations - using renamed column
+    df['session_duration'] = (
         (df['session_end'] - df['session_start']).dt.total_seconds() / 60
     ).round().astype(int)
     
-    # Remove invalid sessions
+    # Remove invalid sessions - using renamed column
     initial_rows = len(df)
-    df = df[df['session_duration_minutes'] > 0]
+    df = df[df['session_duration'] > 0]
     df = df.dropna()
     final_rows = len(df)
     logging.info(f"Cleaning complete. Removed {initial_rows - final_rows} invalid/incomplete sessions.")

@@ -36,20 +36,20 @@ This function simulates `target_session_count` sessions, generating each field a
     *   The generated hour is clipped to the range [0, 23].
     *   A random minute [0, 59] is chosen.
     *   The date, hour, and minute are combined into a datetime object.
-*   **`session_duration_minutes`**:
-    *   Generated using `np.random.lognormal(mean=2.5, sigma=0.8)`. This distribution creates many shorter durations and fewer longer ones, mimicking typical session lengths.
-    *   The result is clamped between 5 and 240 minutes (inclusive) and converted to an integer.
-*   **`session_end`**: Calculated by adding `session_duration_minutes` to `session_start`.
+*   **`session_duration`** (in minutes):
+    *   Generated using `np.random.lognormal(mean=3.8, sigma=1.0)`. The adjusted parameters favor longer durations compared to the previous version.
+    *   The result is clamped between 15 and 600 minutes (10 hours) and converted to an integer, allowing for more realistic multi-hour sessions.
+*   **`session_end`**: Calculated by adding `session_duration` (in minutes) to `session_start`.
 *   **`day_of_week`**: Extracted from `session_start` using `strftime('%A')` (e.g., "Monday").
 *   **`hour_of_day`**: The integer hour (0-23) calculated during `session_start` generation.
 
 ## 4. Final Cleaning (`clean_sessions`)
 
 *   **Datetime Conversion:** `pd.to_datetime` ensures `session_start` and `session_end` are proper datetime objects.
-*   **Duration Recalculation:** Duration is recalculated precisely using `(session_end - session_start).dt.total_seconds() / 60` for accuracy.
-*   **Validation:** Rows with `session_duration_minutes <= 0` or any missing values (`dropna()`) are removed.
+*   **Duration Recalculation:** Duration (`session_duration`) is recalculated precisely using `(session_end - session_start).dt.total_seconds() / 60` for accuracy and consistency.
+*   **Validation:** Rows with `session_duration <= 0` or any missing values (`dropna()`) are removed.
 
 ## Output File (`output/cleaned_sessions.csv`)
 
 The final output CSV contains the following columns, ready for analysis:
-`user_id`, `game_id`, `session_start`, `session_end`, `session_duration_minutes`, `day_of_week`, `hour_of_day`.
+`user_id`, `game_id`, `session_start`, `session_end`, `session_duration`, `day_of_week`, `hour_of_day`.
